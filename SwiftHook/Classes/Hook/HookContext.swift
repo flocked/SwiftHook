@@ -325,38 +325,30 @@ extension HookContext: Hashable {
     }
 }
 
-private var hookContextPool: [HookContextKey: HookContext] = [:]
-
-private struct HookContextKey: Hashable {
-    let classID: ObjectIdentifier
-    let selector: Selector
-    
-    init(_ class_: AnyClass, _ selector: Selector) {
-        self.classID = ObjectIdentifier(class_)
-        self.selector = selector
-    }
-}
+private var hookContextPool = Set<HookContext>()
 
 func getHookContext(targetClass: AnyClass, selector: Selector, isSpecifiedInstance: Bool) throws -> HookContext {
     if getMethodWithoutSearchingSuperClasses(targetClass: targetClass, selector: selector) == nil {
         try overrideSuperMethod(targetClass: targetClass, selector: selector)
     }
-    var hookContext: HookContext! = hookContextPool[.init(targetClass, selector)]
+    var hookContext: HookContext! = hookContextPool.first(where: { (element) -> Bool in
+        element.targetClass == targetClass && element.selector == selector
+    })
     if hookContext == nil {
         hookContext = try HookContext.init(targetClass: targetClass, selector: selector, isSpecifiedInstance: isSpecifiedInstance)
-        hookContextPool[.init(targetClass, selector)] = hookContext
+        hookContextPool.insert(hookContext)
     }
     return hookContext
 }
 
 func removeHookContext(hookContext: HookContext) {
-    hookContextPool[.init(hookContext.targetClass, hookContext.selector)] = nil
+    hookContextPool.remove(hookContext)
 }
 
 // MARK: This is debug tools.
 func debug_getNormalClassHookContextsCount() -> Int {
     var count = 0
-    for item in hookContextPool.values where !item.isSpecifiedInstance {
+    for item in hookContextPool where !item.isSpecifiedInstance {
         count += 1
     }
     return count
@@ -364,7 +356,7 @@ func debug_getNormalClassHookContextsCount() -> Int {
 
 func debug_getinstancewHookContextsCount() -> Int {
     var count = 0
-    for item in hookContextPool.values where item.isSpecifiedInstance {
+    for item in hookContextPool where item.isSpecifiedInstance {
         count += 1
     }
     return count
