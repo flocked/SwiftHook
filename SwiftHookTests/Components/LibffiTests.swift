@@ -7,7 +7,7 @@
 //
 
 import XCTest
-import libffi_apple
+import Libffi
 
 class LibffiTests: XCTestCase {
     

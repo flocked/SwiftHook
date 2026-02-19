@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import libffi_apple
+import Libffi
 #if SWIFT_PACKAGE
 import SwiftHookOCSources
 #endif

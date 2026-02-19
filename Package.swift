@@ -13,7 +13,6 @@ let package = Package(
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
-        .package(url: "https://github.com/623637646/libffi.git", from: "3.4.7")
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -22,12 +21,17 @@ let package = Package(
         // Source Code
         .target(
             name: "SwiftHookOCSources",
-            dependencies: [.product(name: "libffi_apple", package: "libffi")],
+            dependencies: ["Libffi"],
             path: "SwiftHook/Classes/OCSources",
             publicHeadersPath: ""),
+        .target(name: "Libffi",
+                path: "SwiftHook/Libffi",
+                exclude: ["vendor"],
+                publicHeadersPath: "include",
+            cSettings: [.define("DARWIN"), .headerSearchPath("include"), .define("USE_DL_PREFIX"), .unsafeFlags(["-Wno-deprecated-declarations", "-Wno-shorten-64-to-32"]),]),
         .target(
             name: "SwiftHook",
-            dependencies: [.product(name: "libffi_apple", package: "libffi"), "SwiftHookOCSources"],
+            dependencies: ["Libffi", "SwiftHookOCSources"],
             path: "SwiftHook/Classes",
             exclude: ["OCSources"])
     ]
